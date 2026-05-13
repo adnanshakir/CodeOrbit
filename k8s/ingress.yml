@@ -5,7 +5,7 @@ metadata:
   labels:
     app.kubernetes.io/name: codespace-ingress
 spec:
-  ingressClassName: nginx
+  ingressClassName: nginx 
   rules:
   - http:
       paths:

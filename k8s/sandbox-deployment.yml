@@ -14,8 +14,10 @@ spec:
       labels:
         app: sandbox
     spec:
+      serviceAccountName: resource-manager
       containers:
       - image:  sandbox:latest
+        imagePullPolicy: IfNotPresent
         name:  main-sandbox-container
         resources:
           limits:
@@ -38,4 +40,4 @@ spec:
           timeoutSeconds: 10
         ports:
         - containerPort:  3000
-          name:  main-sandbox-port
+          name:  main-sandbox

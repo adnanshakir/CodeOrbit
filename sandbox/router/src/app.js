@@ -50,22 +50,14 @@ function getAgentproxy(sandboxId) {
 
 // proxy middleware
 app.use((req, res, next) => {
-  const host = req.headers.host || "";
-  const parts = host.split(".");
-  const sandboxId = parts[0];
-  const subdomain = parts[1] || "";
+  const host = req.headers.host;
+  const sandboxId = host.split(".")[0];
 
-  // Route preview hostnames (*.preview.localhost) to the sandbox service
-  if (subdomain === "preview") {
-    return getProxy(sandboxId)(req, res, next);
-  }
-
-  // Route agent hostnames (*.agent.localhost) to the agent proxy
-  if (subdomain === "agent") {
+  if( host.split(".")[1] === "agent" ) {
     return getAgentproxy(sandboxId)(req, res, next);
   }
 
-  return next();
-});
+  return getProxy(sandboxId)(req, res, next);
+})
 
 export default app;

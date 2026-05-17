@@ -37,6 +37,6 @@ spec:
         path: "/"
         backend:
           service:
-            name: agent-service
+            name: router-service
             port:
               number: 80

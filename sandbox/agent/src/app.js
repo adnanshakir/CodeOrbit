@@ -108,37 +108,35 @@ app.patch("/update-files", async (req, res) => {
 
   if (!updates || !Array.isArray(updates)) {
     return res.status(400).json({
-      message: "Invalid request body. 'updates' property is required and should be an array.",
+      message: 'Invalid request body. Expected a JSON object with an "updates" property containing an array of file updates.',
       status: "error",
     });
   }
 
-  const result = await Promise.all(
+  const results = await Promise.all(
     updates.map(async (update) => {
       const { file, content } = update;
       const filePath = path.join(WORKING_DIR, file);
-
-      if (!file || typeof content !== "string") {
-        return res.status(400).json({
-          message: "Each update must have a 'file' property and a 'content' property.",
-          status: "error",
-        });
-      }
-
       try {
+        console.log(path.dirname(filePath), filePath);
+
+        await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
         await fs.promises.writeFile(filePath, content, "utf-8");
         return {
           [filePath]: "File updated successfully",
         };
-      } catch (error) {
+      } catch (err) {
         return {
-          [filePath]: `Error updating file: ${error.message}`,
+          [filePath]: `Error updating file: ${err.message}`,
         };
       }
     }),
   );
 
-  res.status(200).json({ message: "Files updated successfully", updates: result, status: "success" });
+  res.status(200).json({
+    message: "File update results",
+    results,
+  });
 });
 
 /*

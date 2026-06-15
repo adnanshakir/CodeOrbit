@@ -2,7 +2,7 @@ import axios from "axios";
 import { tool } from "langchain";
 import * as z from "zod";
 
-const HOST = "019e3b71-a53c-74ca-8994-de103665e0f0.agent.localhost";
+const HOST = "sandbobx-service-019ecb1f-1714-727a-8d51-d311ebfcc5c5.agent.:3000";
 
 export const listFiles = tool(
   async () => {

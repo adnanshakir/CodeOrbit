@@ -8,11 +8,11 @@ spec:
   replicas: 2
   selector:
     matchLabels:
-      name:  ai-server
+      app:  ai-server
   template:
     metadata:
       labels:
-        name:  ai-server
+        app:  ai-server
     spec:
       containers:
       - image:  ai-orchestration
@@ -24,6 +24,12 @@ spec:
           limits:
             cpu: "500m"
             memory: "256M"
+        env:
+        - name: MISTRAL_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name:  ai-secret
+              key: MISTRAL_API_KEY
         livenessProbe:
           httpGet:
             path: /api/status/healthz

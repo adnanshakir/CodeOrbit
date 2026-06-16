@@ -5,7 +5,7 @@ import * as z from "zod";
 const REQUEST_TIMEOUT_MS = 10000;
 
 export const listFiles = tool(
-  async () => {
+  async ({}, config) => {
     console.log("Using listFiles tool!");
     console.log("==================================");
     console.time("listFiles");
@@ -13,7 +13,7 @@ export const listFiles = tool(
 
     try {
       const response = await axios.get(
-        `http://sandbox-service-019ed024-9745-75b0-8c26-d05ad4bb6f6f:3000/list-files`,
+        `http://sandbox-service-${config.context.projectId}:3000/list-files`,
         {
           timeout: REQUEST_TIMEOUT_MS,
         }
@@ -43,7 +43,7 @@ export const listFiles = tool(
 );
 
 export const readFiles = tool(
-  async ({ files }) => {
+  async ({ files = [] }, config) => {
     console.log("Using readFiles tool!");
     console.log("==================================");
     console.time("readFiles");
@@ -51,7 +51,7 @@ export const readFiles = tool(
 
     try {
       const response = await axios.get(
-        `http://sandbox-service-019ed024-9745-75b0-8c26-d05ad4bb6f6f:3000/read-files`,
+        `http://sandbox-service-${config.context.projectId}:3000/read-files`,
         {
           params: {
             files: files.join(","),
@@ -86,7 +86,7 @@ export const readFiles = tool(
 );
 
 export const updateFiles = tool(
-  async ({ files }) => {
+  async ({ files }, config) => {
     console.log("Using updateFiles tool!");
     console.log("==================================");
     console.time("updateFiles");
@@ -94,7 +94,7 @@ export const updateFiles = tool(
 
     try {
       const response = await axios.patch(
-        `http://sandbox-service-019ed024-9745-75b0-8c26-d05ad4bb6f6f:3000/update-files`,
+        `http://sandbox-service-${config.context.projectId}:3000/update-files`,
         {
           updates: files,
         },

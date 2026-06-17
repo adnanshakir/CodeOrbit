@@ -6,22 +6,18 @@ const REQUEST_TIMEOUT_MS = 10000;
 
 export const listFiles = tool(
   async ({}, config) => {
-    console.log("Using listFiles tool!");
-    console.log("==================================");
-    console.time("listFiles");
-    console.log("Before GET /list-files");
-
     try {
-      const response = await axios.get(
-        `http://sandbox-service-${config.context.projectId}:3000/list-files`,
-        {
-          timeout: REQUEST_TIMEOUT_MS,
-        }
-      );
+      const writer = config.writer;
 
-      console.log("After GET /list-files");
-      console.log("Status:", response.status);
-      console.log("Response:", response.data);
+      if (writer) {
+        writer?.("Listing files in the working directory...\n");
+      }
+
+      const response = await axios.get(`http://sandbox-service-${config.context.projectId}:3000/list-files`, {
+        timeout: REQUEST_TIMEOUT_MS,
+      });
+
+      writer?.("Files listed successfully.\n");
 
       return JSON.stringify(response.data.files);
     } catch (error) {
@@ -30,39 +26,32 @@ export const listFiles = tool(
       console.log("Response:", error?.response?.data ?? null);
       console.log("Message:", error?.message);
       throw error;
-    } finally {
-      console.timeEnd("listFiles");
-      console.log("==================================");
     }
   },
   {
     name: "list-files",
     description: "List all files in the working directory and its subdirectories.",
     schema: z.object({}),
-  }
+  },
 );
 
 export const readFiles = tool(
   async ({ files = [] }, config) => {
-    console.log("Using readFiles tool!");
-    console.log("==================================");
-    console.time("readFiles");
-    console.log("Before GET /read-files");
-
     try {
-      const response = await axios.get(
-        `http://sandbox-service-${config.context.projectId}:3000/read-files`,
-        {
-          params: {
-            files: files.join(","),
-          },
-          timeout: REQUEST_TIMEOUT_MS,
-        }
-      );
+      const writer = config.writer;
 
-      console.log("After GET /read-files");
-      console.log("Status:", response.status);
-      console.log("Response:", response.data);
+      if (writer) {
+        writer?.(`Reading contents of files: ${files.join(", ")}...\n`);
+      }
+
+      const response = await axios.get(`http://sandbox-service-${config.context.projectId}:3000/read-files`, {
+        params: {
+          files: files.join(","),
+        },
+        timeout: REQUEST_TIMEOUT_MS,
+      });
+
+      writer?.("Files read successfully.\n");
 
       return JSON.stringify(response.data);
     } catch (error) {
@@ -71,9 +60,6 @@ export const readFiles = tool(
       console.log("Response:", error?.response?.data ?? null);
       console.log("Message:", error?.message);
       throw error;
-    } finally {
-      console.timeEnd("readFiles");
-      console.log("==================================");
     }
   },
   {
@@ -82,17 +68,18 @@ export const readFiles = tool(
     schema: z.object({
       files: z.array(z.string()),
     }),
-  }
+  },
 );
 
 export const updateFiles = tool(
   async ({ files }, config) => {
-    console.log("Using updateFiles tool!");
-    console.log("==================================");
-    console.time("updateFiles");
-    console.log("Before PATCH /update-files");
-
     try {
+      const writer = config.writer;
+
+      if (writer) {
+        writer?.(`Updating files: ${files.map((f) => f.file).join(", ")}...\n`);
+      }
+
       const response = await axios.patch(
         `http://sandbox-service-${config.context.projectId}:3000/update-files`,
         {
@@ -100,12 +87,10 @@ export const updateFiles = tool(
         },
         {
           timeout: REQUEST_TIMEOUT_MS,
-        }
+        },
       );
 
-      console.log("After PATCH /update-files");
-      console.log("Status:", response.status);
-      console.log("Response:", response.data);
+      writer?.("Upadted files successfully.\n");
 
       return JSON.stringify(response.data.results);
     } catch (error) {
@@ -114,9 +99,6 @@ export const updateFiles = tool(
       console.log("Response:", error?.response?.data ?? null);
       console.log("Message:", error?.message);
       throw error;
-    } finally {
-      console.timeEnd("updateFiles");
-      console.log("==================================");
     }
   },
   {
@@ -127,8 +109,8 @@ export const updateFiles = tool(
         z.object({
           file: z.string(),
           content: z.string(),
-        })
+        }),
       ),
     }),
-  }
+  },
 );

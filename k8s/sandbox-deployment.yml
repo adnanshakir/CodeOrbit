@@ -13,6 +13,7 @@ spec:
     metadata:
       labels:
         app: sandbox
+        component: sandbox-server
     spec:
       serviceAccountName: resource-manager
       containers:

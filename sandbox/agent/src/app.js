@@ -7,7 +7,7 @@ import pty from "node-pty";
 import os from "os";
 import http from "http";
 
-const WORKING_DIR = process.env.WORKING_DIR || "/workspace";
+const WORKING_DIR = "/workspace";
 
 const app = express();
 const httpServer = http.createServer(app);

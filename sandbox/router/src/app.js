@@ -1,13 +1,39 @@
 import express from "express";
 import morgan from "morgan";
 import { createProxyMiddleware } from "http-proxy-middleware";
-import { proxyUpgrade } from "httpxy";
+import { createProxyServer } from "httpxy";
 import http from "http";
 
 const app = express();
 
+const wsProxy = createProxyServer({
+  changeOrigin: true,
+});
+
+wsProxy.on("error", (err, req, socket) => {
+  console.error("WS proxy error:", err.message);
+  socket?.destroy();
+});
+
 // middlewares
 app.use(morgan("combined"));
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
 
 // routes
 app.get("/api/status/healthz", (req, res) => {
@@ -21,22 +47,17 @@ app.get("/api/status/readyz", (req, res) => {
 const proxies = {};
 const agentProxies = {};
 
-function getRequestRoute(req) {
-  const host = req.headers.host || "";
-  const [sandboxIdFromHost, typeFromHost] = host.split(".");
+function getHostParts(req) {
+  const hostname = req.headers.host?.split(":")[0];
 
-  if (typeFromHost === "agent" || typeFromHost === "preview") {
-    return { sandboxId: sandboxIdFromHost, type: typeFromHost };
+  if (!hostname) {
+    return { hostname: null, sandboxId: null, type: null };
   }
 
-  const url = new URL(req.url || "/", `http://${host || "localhost"}`);
-  const sandboxIdFromQuery = url.searchParams.get("sandboxId");
+  const sandboxId = hostname.split(".")[0];
+  const type = hostname.split(".")[1];
 
-  if (url.pathname.startsWith("/socket.io") && sandboxIdFromQuery) {
-    return { sandboxId: sandboxIdFromQuery, type: "agent" };
-  }
-
-  return { sandboxId: null, type: null };
+  return { hostname, sandboxId, type };
 }
 
 export function getProxy(sandboxId) {
@@ -46,7 +67,6 @@ export function getProxy(sandboxId) {
     proxies[sandboxId] = createProxyMiddleware({
       target,
       changeOrigin: true,
-      ws: true,
     });
   }
 
@@ -60,7 +80,6 @@ export function getAgentproxy(sandboxId) {
     agentProxies[sandboxId] = createProxyMiddleware({
       target,
       changeOrigin: true,
-      ws: true,
     });
   }
 
@@ -69,7 +88,20 @@ export function getAgentproxy(sandboxId) {
 
 // proxy middleware
 app.use((req, res, next) => {
-  const { sandboxId, type } = getRequestRoute(req);
+  console.log("HOST:", req.headers.host);
+  console.log("URL:", req.url);
+  next();
+});
+
+app.use((req, res, next) => {
+  const { hostname } = getHostParts(req);
+
+  if (!hostname) {
+    return res.status(400).json({ error: "Missing host" });
+  }
+
+  const sandboxId = hostname.split(".")[0];
+  const type = hostname.split(".")[1];
 
   if (type === "agent") {
     return getAgentproxy(sandboxId)(req, res, next);
@@ -81,7 +113,6 @@ app.use((req, res, next) => {
 
   return res.status(404).json({
     error: "Invalid route",
-    message: "Use {sandboxId}.agent.localhost or /socket.io?sandboxId={sandboxId} for Socket.IO.",
   });
 });
 
@@ -90,26 +121,45 @@ const server = http.createServer(app);
 
 // Handle WebSocket / Socket.IO upgrades
 server.on("upgrade", (req, socket, head) => {
-  const { sandboxId, type } = getRequestRoute(req);
-  console.log("UPGRADE", req.headers.host, req.url);
+  const { hostname, sandboxId, type } = getHostParts(req);
+
+  if (!hostname) {
+    socket.destroy();
+    return;
+  }
+
+  socket.on("error", () => socket.destroy());
+
+  console.log("UPGRADE:", {
+    host: req.headers.host,
+    url: req.url,
+    sandboxId,
+    type,
+  });
 
   if (type === "agent") {
-    proxyUpgrade({ host: `sandbox-service-${sandboxId}`, port: 3000 }, req, socket, head, {
-      changeOrigin: true,
-    }).catch((error) => {
-      console.error("Agent WebSocket proxy error:", error.message);
-      socket.destroy();
-    });
+    wsProxy.ws(
+      req,
+      socket,
+      {
+        target: `http://sandbox-service-${sandboxId}:3000`,
+      },
+      head
+    ).catch(() => socket.destroy());
+
     return;
   }
 
   if (type === "preview") {
-    proxyUpgrade({ host: `sandbox-service-${sandboxId}`, port: 80 }, req, socket, head, {
-      changeOrigin: true,
-    }).catch((error) => {
-      console.error("Preview WebSocket proxy error:", error.message);
-      socket.destroy();
-    });
+    wsProxy.ws(
+      req,
+      socket,
+      {
+        target: `http://sandbox-service-${sandboxId}`,
+      },
+      head
+    ).catch(() => socket.destroy());
+
     return;
   }
 

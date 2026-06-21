@@ -6,5 +6,6 @@ import api from "@/lib/axios";
  */
 export async function createSandbox() {
   const response = await api.post("/api/sandbox/start");
+  console.log("Sandbox created:", response.data);
   return response.data;
 }

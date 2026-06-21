@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback } from "react";
 import { createSandbox as createSandboxApi } from "@/services/sandboxApi";
+import { waitForSandbox } from "@/services/sandboxReady";
 
 const SandboxContext = createContext(null);
 
@@ -19,8 +20,13 @@ export function SandboxProvider({ children }) {
   const createSandbox = useCallback(async () => {
     setIsCreating(true);
     setCreateError(null);
+    setIsSandboxReady(false);
+    
     try {
       const data = await createSandboxApi();
+
+      await waitForSandbox(data.agentUrl);
+
       setSandboxId(data.sandboxId);
       setPreviewUrl(data.previewUrl);
       setAgentUrl(data.agentUrl);

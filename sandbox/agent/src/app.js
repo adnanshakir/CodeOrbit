@@ -6,6 +6,7 @@ import { Server } from "socket.io";
 import pty from "node-pty";
 import os from "os";
 import http from "http";
+import cors from "cors";
 
 const WORKING_DIR = "/workspace";
 
@@ -16,6 +17,17 @@ const httpServer = http.createServer(app);
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+  console.log(req.method, req.url);
+  next();
+});
+
+// CORS setup
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type"],
+}));
 
 const io = new Server(httpServer, {
   cors: {
@@ -24,6 +36,9 @@ const io = new Server(httpServer, {
   },
 });
 
+io.on("connection", (socket) => {
+  console.log("SOCKET CONNECTED:", socket.id);
+});
 // PTY setup
 const shell = process.env.SHELL || "bash";
 
@@ -51,7 +66,7 @@ app.get("/", (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  console.log("A client connected:", socket.id);
+  console.log("SOCKET CONNECTED:", socket.id);
 
   socket.on("terminal-input", (data) => {
     ptyProcess.write(data);

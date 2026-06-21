@@ -26,7 +26,7 @@ app.post("/api/sandbox/start", async (req, res) => {
       sandboxId,
       previewUrl: `http://${sandboxId}.preview.localhost`,
       agentUrl: `http://${sandboxId}.agent.localhost`,
-      agentSocketUrl: `http://localhost/socket.io?sandboxId=${sandboxId}`,
+      agentSocketUrl: `http://${sandboxId}.agent.localhost`
     });
   } catch (error) {
     return res.status(500).json({

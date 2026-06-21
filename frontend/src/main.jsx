@@ -5,9 +5,7 @@ import App from "./App.jsx";
 import "./index.css";
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <SandboxProvider>
-      <App />
-    </SandboxProvider>
-  </StrictMode>
+  <SandboxProvider>
+    <App />
+  </SandboxProvider>,
 );

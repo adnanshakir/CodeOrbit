@@ -107,6 +107,8 @@ export function useTerminal(agentSocketUrl, containerRef) {
       observer.observe(containerRef.current);
     }
 
+    console.log("SOCKET URL:", agentSocketUrl);
+
     return () => {
       clearTimeout(fitTimeout);
       observer.disconnect();

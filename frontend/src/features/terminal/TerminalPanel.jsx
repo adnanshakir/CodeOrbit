@@ -17,14 +17,14 @@ export default function TerminalPanel({ isCollapsed, onToggleCollapse }) {
   const { isDisconnected } = useTerminal(agentSocketUrl, containerRef);
 
   return (
-    <div className="flex h-full min-w-0 flex-col bg-[#0a0a0a]">
-      {/* Header — always visible, acts as collapse toggle */}
+    <div className="flex h-full min-w-0 flex-col">
+      {/* Header — solid background, clear border, sticky */}
       <div
-        className="flex h-10 shrink-0 cursor-pointer select-none items-center justify-between border-t border-border bg-background px-4"
+        className="flex h-10 shrink-0 cursor-pointer select-none items-center justify-between border-b border-border bg-zinc-900 px-4"
         onClick={onToggleCollapse}
       >
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 border-b-2 border-foreground pb-0.5">
+          <div className="flex items-center gap-1.5">
             <TerminalIcon className="h-3.5 w-3.5 text-foreground" />
             <span className="text-xs font-medium text-foreground">Terminal</span>
           </div>
@@ -36,19 +36,24 @@ export default function TerminalPanel({ isCollapsed, onToggleCollapse }) {
           )}
         </div>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 shrink-0"
-              onClick={(e) => { e.stopPropagation(); onToggleCollapse(); }}
-            >
-              {isCollapsed ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{isCollapsed ? "Expand" : "Collapse"}</TooltipContent>
-        </Tooltip>
+        <div className="flex items-center gap-1">
+          <span className="mr-2 text-[10px] text-muted-foreground/50">
+            {isCollapsed ? "Ctrl+`" : ""}
+          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                onClick={(e) => { e.stopPropagation(); onToggleCollapse(); }}
+              >
+                {isCollapsed ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{isCollapsed ? "Expand (Ctrl+`)" : "Collapse (Ctrl+`)"}</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
 
       {/* Disconnect banner */}
@@ -62,7 +67,7 @@ export default function TerminalPanel({ isCollapsed, onToggleCollapse }) {
       {/* XTerm container — hidden when collapsed, never unmounted */}
       <div
         ref={containerRef}
-        className="min-w-0 flex-1 overflow-hidden p-1"
+        className="min-w-0 flex-1 overflow-hidden bg-[#0a0a0a] p-1"
         style={{
           minHeight: 0,
           display: isCollapsed ? "none" : undefined,

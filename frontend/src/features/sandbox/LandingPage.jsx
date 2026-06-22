@@ -1,11 +1,19 @@
-import { useState } from "react";
-import { Box, Loader2, AlertCircle } from "lucide-react";
+import { Box, Loader2, AlertCircle, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useSandbox } from "@/hooks/useSandbox";
+import { cn } from "@/lib/utils";
 
 export default function LandingPage() {
-  const { createSandbox, isCreating, createError } = useSandbox();
+  const { createSandbox, isCreating, createError, startupStage, startupStages } =
+    useSandbox();
 
   return (
     <div className="flex h-full w-full items-center justify-center bg-background">
@@ -23,25 +31,59 @@ export default function LandingPage() {
             Start building
           </CardTitle>
           <CardDescription className="text-sm text-muted-foreground leading-relaxed">
-            Spin up an isolated environment and use AI to generate UI components in real time.
+            Spin up an isolated environment and use AI to generate UI components
+            in real time.
           </CardDescription>
         </CardHeader>
 
         <CardContent className="pb-4">
-          <div className="space-y-2 rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <span className="h-1 w-1 rounded-full bg-muted-foreground" />
-              <span>Isolated React environment</span>
+          {/* Idle: feature list */}
+          {!isCreating && !createError && startupStage === 0 && (
+            <div className="space-y-2 rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <span className="h-1 w-1 rounded-full bg-muted-foreground" />
+                <span>Isolated React environment</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-1 w-1 rounded-full bg-muted-foreground" />
+                <span>AI-powered code generation</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-1 w-1 rounded-full bg-muted-foreground" />
+                <span>Live preview &amp; terminal access</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="h-1 w-1 rounded-full bg-muted-foreground" />
-              <span>AI-powered code generation</span>
+          )}
+
+          {/* Creating: staged progress */}
+          {isCreating && (
+            <div className="space-y-1.5 rounded-md border border-border bg-muted/30 p-3">
+              {startupStages.slice(0, -1).map((stage, i) => {
+                const isDone = startupStage > i;
+                const isCurrent = startupStage === i;
+                return (
+                  <div
+                    key={stage}
+                    className={cn(
+                      "flex items-center gap-2 text-xs transition-colors",
+                      isDone && "text-green-400",
+                      isCurrent && "text-foreground",
+                      !isDone && !isCurrent && "text-muted-foreground/40"
+                    )}
+                  >
+                    {isDone ? (
+                      <Check className="h-3 w-3 shrink-0" />
+                    ) : isCurrent ? (
+                      <Loader2 className="h-3 w-3 shrink-0 animate-spin" />
+                    ) : (
+                      <span className="h-3 w-3 shrink-0" />
+                    )}
+                    <span>{stage}</span>
+                  </div>
+                );
+              })}
             </div>
-            <div className="flex items-center gap-2">
-              <span className="h-1 w-1 rounded-full bg-muted-foreground" />
-              <span>Live preview &amp; terminal access</span>
-            </div>
-          </div>
+          )}
         </CardContent>
 
         <CardFooter className="flex flex-col gap-3">
@@ -60,7 +102,7 @@ export default function LandingPage() {
             {isCreating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating sandbox&hellip;
+                {startupStages[startupStage] || "Starting…"}
               </>
             ) : createError ? (
               "Retry"

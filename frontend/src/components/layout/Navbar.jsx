@@ -1,16 +1,12 @@
 import {
   Box,
-  MessageSquare,
-  Monitor,
-  PanelBottomClose,
-  PanelBottomOpen,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSandbox } from "@/hooks/useSandbox";
 
@@ -18,23 +14,19 @@ import { useSandbox } from "@/hooks/useSandbox";
  * @param {{
  *   explorerCollapsed: boolean,
  *   chatCollapsed: boolean,
- *   terminalCollapsed: boolean,
  *   onToggleExplorer: () => void,
  *   onToggleChat: () => void,
- *   onToggleTerminal: () => void,
- *   onOpenPreview: () => void,
+ *   onOpenQuickOpen: () => void,
  * }} props
  */
 export default function Navbar({
   explorerCollapsed,
   chatCollapsed,
-  terminalCollapsed,
   onToggleExplorer,
   onToggleChat,
-  onToggleTerminal,
-  onOpenPreview,
+  onOpenQuickOpen,
 }) {
-  const { sandboxId, isSandboxReady } = useSandbox();
+  const { isSandboxReady } = useSandbox();
 
   return (
     <header className="flex h-10 shrink-0 items-center border-b border-border bg-background px-3">
@@ -52,36 +44,26 @@ export default function Navbar({
         )}
       </div>
 
-      {/* Center: sandbox ID */}
+      {/* Center: Search bar (Ctrl+P trigger) */}
       <div className="flex flex-1 justify-center">
-        {sandboxId && (
-          <span className="rounded border border-border bg-muted/40 px-2.5 py-0.5 font-mono text-[11px] text-muted-foreground">
-            {sandboxId.length > 28 ? `${sandboxId.slice(0, 28)}…` : sandboxId}
-          </span>
+        {isSandboxReady && (
+          <button
+            onClick={onOpenQuickOpen}
+            className="flex h-7 w-full max-w-xs items-center gap-2 rounded border border-border bg-muted/40 px-3 text-xs text-muted-foreground transition-colors hover:bg-muted/60"
+          >
+            <Search className="h-3 w-3 shrink-0" />
+            <span className="flex-1 text-left">Search files…</span>
+            <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]">
+              Ctrl+P
+            </kbd>
+          </button>
         )}
       </div>
 
-      {/* Right: actions */}
+      {/* Right: panel toggles */}
       <div className="flex flex-1 items-center justify-end gap-0.5">
         {isSandboxReady && (
           <>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 gap-1.5 px-2 text-xs"
-                  onClick={onOpenPreview}
-                >
-                  <Monitor className="h-3.5 w-3.5" />
-                  Preview
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Switch to Preview tab</TooltipContent>
-            </Tooltip>
-
-            <Separator orientation="vertical" className="mx-1 h-5" />
-
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onToggleExplorer}>
@@ -91,19 +73,7 @@ export default function Navbar({
                   }
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{explorerCollapsed ? "Show Explorer" : "Hide Explorer"}</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onToggleTerminal}>
-                  {terminalCollapsed
-                    ? <PanelBottomOpen className="h-4 w-4" />
-                    : <PanelBottomClose className="h-4 w-4" />
-                  }
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{terminalCollapsed ? "Show Terminal" : "Hide Terminal"}</TooltipContent>
+              <TooltipContent>{explorerCollapsed ? "Show Explorer (Ctrl+B)" : "Hide Explorer (Ctrl+B)"}</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -115,7 +85,7 @@ export default function Navbar({
                   }
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{chatCollapsed ? "Show Chat" : "Hide Chat"}</TooltipContent>
+              <TooltipContent>{chatCollapsed ? "Show Chat (Ctrl+Shift+C)" : "Hide Chat (Ctrl+Shift+C)"}</TooltipContent>
             </Tooltip>
           </>
         )}

@@ -1,16 +1,17 @@
 import { Router } from "express";
 import User from "../models/user.model.js";
 import passport from "passport";
+import jwt from "jsonwebtoken";
 
 const router = Router();
 
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+router.get("/google", passport.authenticate("google", { session: false,scope: ["profile", "email"] }));
 
-router.get("/google/callback", passport.authenticate("google", { failureRedirect: "/login" }), async (req, res) => {
+router.get("/google/callback", passport.authenticate("google", { session: false,failureRedirect: "/login" }), async (req, res) => {
   try {
     const { id, displayName, emails, photos } = req.user;
-    const email = emails[0].value;
-    const avatar = photos[0].value;
+    const email = emails[0]?.value;
+    const avatar = photos[0]?.value;
 
     // Check if user already exists
     let user = await User.findOne({

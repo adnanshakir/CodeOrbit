@@ -17,15 +17,18 @@ app.use(cookieParser());
 app.use(passport.initialize());
 
 // Passport Google OAuth Strategy
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: '/api/auth/google/callback',
-}, (accessToken, refreshToken, profile, done) => {
-    // Here you would typically find or create a user in your database
-    const user = { id: profile.id, name: profile.displayName };
-    return done(null, user);
-}));
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "/api/auth/google/callback",
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      return done(null, profile);
+    }
+  )
+);
 
 // Routes
 app.get('/_status/healthz', (req, res) => {
@@ -33,7 +36,7 @@ app.get('/_status/healthz', (req, res) => {
 });
 
 app.get("/_status/readyz", (req, res) => {
-    res.satus(200).json({ status: "ready" });
+    res.status(200).json({ status: "ready" });
 });
 
 app.use('/api/auth', authRoutes);

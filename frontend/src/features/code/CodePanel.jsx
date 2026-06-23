@@ -117,7 +117,7 @@ export default function CodePanel({ agentUrl, selectedFile }) {
   const language = activeTab ? getLanguage(getBasename(activeTab)) : "text";
 
   return (
-    <div className="flex h-full min-w-0 flex-col bg-background">
+    <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-background">
       {/* Tab bar */}
       {tabs.length > 0 && (
         <div className="flex shrink-0 items-center border-b border-border bg-background">
@@ -133,7 +133,7 @@ export default function CodePanel({ agentUrl, selectedFile }) {
                   onClick={() => setActiveTab(filePath)}
                   title={filePath}
                   className={cn(
-                    "group flex h-8 shrink-0 max-w-[180px] items-center gap-1.5 border-r border-border px-3 text-[12px] transition-colors",
+                    "group flex h-8 shrink-0 max-w-45 items-center gap-1.5 border-r border-border px-3 text-[12px] transition-colors",
                     isActive
                       ? "border-t border-t-primary bg-background text-foreground"
                       : "bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
@@ -193,7 +193,7 @@ export default function CodePanel({ agentUrl, selectedFile }) {
       )}
 
       {/* Content area */}
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {/* Breadcrumb */}
         {activeTab && (
           <div className="shrink-0 border-b border-border px-4 py-1">
@@ -256,8 +256,9 @@ export default function CodePanel({ agentUrl, selectedFile }) {
                 fontSize: "13px",
                 lineHeight: "1.6",
                 fontFamily: '"GeistMono Variable", "Geist Mono", "Cascadia Code", "Fira Code", Consolas, monospace',
-                // Critical for scrolling: let content determine size
                 minHeight: "100%",
+                minWidth: "100%",
+                width: "max-content",
                 whiteSpace: wordWrap ? "pre-wrap" : "pre",
                 wordBreak: wordWrap ? "break-word" : "normal",
               }}

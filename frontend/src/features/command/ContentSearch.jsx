@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FileCode, Loader2, Search } from "lucide-react";
+import { FileCode, Loader2, Search, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -101,6 +102,11 @@ export default function ContentSearch({ isOpen, onClose, files, agentUrl, onFile
   }, [query, doSearch]);
 
   const handleKeyDown = (e) => {
+    if (results.length === 0 && (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter")) {
+      e.preventDefault();
+      return;
+    }
+
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setSelectedIndex((i) => Math.min(i + 1, results.length - 1));
@@ -134,7 +140,7 @@ export default function ContentSearch({ isOpen, onClose, files, agentUrl, onFile
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="top-[20%] max-w-xl translate-y-0 gap-0 p-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 [&>button]:hidden">
+      <DialogContent showCloseButton={false} className="top-[20%] max-w-xl translate-y-0 gap-0 overflow-hidden rounded-xl border border-border bg-zinc-950 p-0 text-foreground shadow-2xl data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 [&>button]:hidden">
         {/* Search input */}
         <div className="flex items-center gap-2 border-b border-border px-3 py-2">
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -146,11 +152,23 @@ export default function ContentSearch({ isOpen, onClose, files, agentUrl, onFile
             placeholder="Search in files…"
             className="h-7 border-0 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0"
           />
+          {query && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => setQuery("")}
+              aria-label="Clear content search"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
           {isSearching && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />}
         </div>
 
         {/* Results */}
-        <ScrollArea className="max-h-[350px]">
+        <ScrollArea className="max-h-80">
           {query.length < 2 && (
             <div className="px-3 py-6 text-center text-xs text-muted-foreground/50">
               Type at least 2 characters to search
@@ -183,7 +201,7 @@ export default function ContentSearch({ isOpen, onClose, files, agentUrl, onFile
                     <span className="text-[10px] text-muted-foreground/50">
                       :{match.line}
                     </span>
-                    <span className="ml-auto text-[10px] text-muted-foreground/40 truncate max-w-[200px]">
+                    <span className="ml-auto max-w-48 truncate text-[10px] text-muted-foreground/40">
                       {match.file}
                     </span>
                   </div>

@@ -13,8 +13,10 @@ import LandingPage from "@/features/sandbox/LandingPage";
 import CommandPalette from "@/features/command/CommandPalette";
 import QuickOpen from "@/features/command/QuickOpen";
 import ContentSearch from "@/features/command/ContentSearch";
+import KeyboardShortcutsDialog from "@/features/command/KeyboardShortcutsDialog";
 import { useSandbox } from "@/hooks/useSandbox";
 import { useResizable, useResizableRight, useResizableTop } from "@/hooks/useResizable";
+import { useWorkspaceShortcuts } from "@/hooks/useWorkspaceShortcuts";
 
 // ── Layout constants (pixels) ───────────────────────────────────────────────
 const EXPLORER = { default: 260, min: 180, max: 500, collapsed: 48 };
@@ -77,10 +79,49 @@ function WorkspacePage() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [quickOpenOpen, setQuickOpenOpen] = useState(false);
   const [contentSearchOpen, setContentSearchOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [commandQuery, setCommandQuery] = useState("");
 
   const toggleExplorer = useCallback(() => setExplorerCollapsed((c) => !c), []);
   const toggleChat = useCallback(() => setChatCollapsed((c) => !c), []);
   const toggleTerminal = useCallback(() => setTerminalCollapsed((c) => !c), []);
+
+  const closeDialogs = useCallback(() => {
+    setCommandPaletteOpen(false);
+    setQuickOpenOpen(false);
+    setContentSearchOpen(false);
+    setShortcutsOpen(false);
+  }, []);
+
+  const openCommandPalette = useCallback(() => {
+    closeDialogs();
+    setCommandPaletteOpen(true);
+  }, [closeDialogs]);
+
+  const openQuickOpen = useCallback(() => {
+    closeDialogs();
+    setQuickOpenOpen(true);
+  }, [closeDialogs]);
+
+  const openContentSearch = useCallback(() => {
+    closeDialogs();
+    setContentSearchOpen(true);
+  }, [closeDialogs]);
+
+  const openShortcutsDialog = useCallback(() => {
+    closeDialogs();
+    setShortcutsOpen(true);
+  }, [closeDialogs]);
+
+  useWorkspaceShortcuts({
+    enabled: true,
+    onToggleExplorer: toggleExplorer,
+    onToggleTerminal: toggleTerminal,
+    onToggleChat: toggleChat,
+    onOpenCommandPalette: openCommandPalette,
+    onOpenQuickOpen: openQuickOpen,
+    onOpenContentSearch: openContentSearch,
+  });
 
   const handleFileSelect = useCallback((file) => {
     setSelectedFile(file);
@@ -145,11 +186,9 @@ function WorkspacePage() {
   return (
     <div className="flex h-full flex-col bg-background">
       <Navbar
-        explorerCollapsed={explorerCollapsed}
-        chatCollapsed={chatCollapsed}
-        onToggleExplorer={toggleExplorer}
-        onToggleChat={toggleChat}
-        onOpenQuickOpen={() => setQuickOpenOpen(true)}
+        commandQuery={commandQuery}
+        onClearCommandQuery={() => setCommandQuery("")}
+        onOpenCommandPalette={openCommandPalette}
       />
 
       {/* ── Body: Explorer | Right column ── */}
@@ -190,7 +229,7 @@ function WorkspacePage() {
               <Tabs
                 value={activeWorkspaceTab}
                 onValueChange={setActiveWorkspaceTab}
-                className="flex h-full flex-col"
+                className="flex h-full min-h-0 flex-col"
               >
                 <TabsList className="h-9 w-full shrink-0 justify-start rounded-none border-b border-border bg-background px-2">
                   <TabsTrigger
@@ -210,7 +249,7 @@ function WorkspacePage() {
                 <TabsContent
                   value="code"
                   forceMount
-                  className="mt-0 flex-1 data-[state=inactive]:hidden"
+                  className="mt-0 flex min-h-0 flex-1 data-[state=inactive]:hidden"
                 >
                   <CodePanel agentUrl={agentUrl} selectedFile={selectedFile} />
                 </TabsContent>
@@ -218,7 +257,7 @@ function WorkspacePage() {
                 <TabsContent
                   value="preview"
                   forceMount
-                  className="mt-0 flex-1 data-[state=inactive]:hidden"
+                  className="mt-0 flex min-h-0 flex-1 data-[state=inactive]:hidden"
                 >
                   <PreviewTab />
                 </TabsContent>
@@ -272,7 +311,15 @@ function WorkspacePage() {
       {/* ── Dialogs ── */}
       <CommandPalette
         isOpen={commandPaletteOpen}
+        query={commandQuery}
+        onQueryChange={setCommandQuery}
         onClose={() => setCommandPaletteOpen(false)}
+        onToggleExplorer={toggleExplorer}
+        onToggleTerminal={toggleTerminal}
+        onToggleChat={toggleChat}
+        onOpenQuickOpen={openQuickOpen}
+        onOpenContentSearch={openContentSearch}
+        onOpenShortcuts={openShortcutsDialog}
       />
       <QuickOpen
         isOpen={quickOpenOpen}
@@ -286,6 +333,10 @@ function WorkspacePage() {
         files={fileList}
         agentUrl={agentUrl}
         onFileSelect={handleFileSelect}
+      />
+      <KeyboardShortcutsDialog
+        isOpen={shortcutsOpen}
+        onClose={() => setShortcutsOpen(false)}
       />
     </div>
   );

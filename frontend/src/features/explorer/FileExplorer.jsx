@@ -12,6 +12,7 @@ import {
   PanelLeftClose,
   RefreshCw,
   Search,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +21,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { listFiles } from "@/services/filesApi";
-
 // ── File icon mapping ───────────────────────────────────────────────────────
 function getFileIcon(filename) {
   const ext = filename.split(".").pop()?.toLowerCase();
@@ -68,8 +68,14 @@ function sortEntries(entries) {
 }
 
 // ── Recursive tree node ─────────────────────────────────────────────────────
-function TreeNode({ name, node, depth, onFileSelect, selectedFile }) {
+function TreeNode({ name, node, depth, onFileSelect, selectedFile, forceOpen }) {
   const [isOpen, setIsOpen] = useState(depth < 2);
+
+  useEffect(() => {
+    if (forceOpen) {
+      setIsOpen(true);
+    }
+  }, [forceOpen]);
 
   if (node.type === "file") {
     const Icon = getFileIcon(name);
@@ -77,7 +83,7 @@ function TreeNode({ name, node, depth, onFileSelect, selectedFile }) {
     return (
       <button
         className={cn(
-          "flex w-full min-w-0 items-center gap-1.5 rounded-none py-[3px] pr-2 text-left text-[12px] leading-5 transition-colors",
+          "flex w-full min-w-0 items-center gap-1.5 rounded-none py-1 pr-2 text-left text-[12px] leading-5 transition-colors",
           "hover:bg-accent/60 hover:text-foreground",
           isSelected
             ? "bg-accent text-foreground"
@@ -96,7 +102,7 @@ function TreeNode({ name, node, depth, onFileSelect, selectedFile }) {
   return (
     <div>
       <button
-        className="flex w-full items-center gap-1 rounded-none py-[3px] pr-2 text-left text-[12px] leading-5 text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+        className="flex w-full items-center gap-1 rounded-none py-1 pr-2 text-left text-[12px] leading-5 text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
         style={{ paddingLeft: `${depth * 12 + 4}px` }}
         onClick={() => setIsOpen((o) => !o)}
       >
@@ -123,6 +129,7 @@ function TreeNode({ name, node, depth, onFileSelect, selectedFile }) {
               depth={depth + 1}
               onFileSelect={onFileSelect}
               selectedFile={selectedFile}
+              forceOpen={forceOpen}
             />
           ))}
         </div>
@@ -258,8 +265,20 @@ export default function FileExplorer({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search files…"
-            className="h-7 pl-6 text-xs bg-muted/40 border-border focus-visible:ring-1"
+            className="h-7 pl-6 pr-8 text-xs bg-muted/40 border-border focus-visible:ring-1"
           />
+          {searchTerm && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              onClick={() => setSearchTerm("")}
+              aria-label="Clear explorer search"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -300,6 +319,7 @@ export default function FileExplorer({
                 depth={0}
                 onFileSelect={onFileSelect}
                 selectedFile={selectedFile}
+                forceOpen={Boolean(searchTerm)}
               />
             ))}
           </div>

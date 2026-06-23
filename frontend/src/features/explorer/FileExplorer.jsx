@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   ChevronRight,
   File,
@@ -162,11 +162,14 @@ export default function FileExplorer({
   selectedFile,
   onFileSelect,
   onToggleCollapse,
+  onFilesLoaded,
 }) {
   const [files, setFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const hasAutoSelected = useRef(false);
 
   const fetchFiles = useCallback(async () => {
     if (!agentUrl) return;
@@ -175,12 +178,21 @@ export default function FileExplorer({
     try {
       const result = await listFiles(agentUrl);
       setFiles(result);
+      onFilesLoaded?.(result);
+
+      // Auto-open first file on initial load
+      if (!hasAutoSelected.current && result.length > 0 && !selectedFile) {
+        hasAutoSelected.current = true;
+        // Prefer App.jsx / App.tsx, else first file
+        const appFile = result.find((f) => /App\.(jsx|tsx|js|ts)$/.test(f));
+        onFileSelect(appFile || result[0]);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
-  }, [agentUrl]);
+  }, [agentUrl, selectedFile, onFileSelect]);
 
   useEffect(() => {
     fetchFiles();

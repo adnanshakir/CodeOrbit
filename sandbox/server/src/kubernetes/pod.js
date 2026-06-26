@@ -29,7 +29,7 @@ export async function createPod(sandboxId) {
                 mountPath: "/seed",
               },
             ],
-          }
+          },
         ],
         containers: [
           {
@@ -90,6 +90,27 @@ export async function createPod(sandboxId) {
     return response;
   } catch (error) {
     return console.error("Error creating pod:", error);
+    throw error;
+  }
+}
+
+export async function deletePod(sandboxId) {
+  try {
+    const podName = `sandbox-pod-${sandboxId}`;
+    const response = await k8sCoreV1Api.deleteNamespacedPod(
+      {
+        name: podName,
+        namespace: "default",
+      },
+      {
+        gracePeriodSeconds: 0, // Force delete immediately
+      },
+    );
+
+    console.log("Pod deleted:", podName);
+    return response;
+  } catch (error) {
+    console.error("Error deleting pod:", error);
     throw error;
   }
 }

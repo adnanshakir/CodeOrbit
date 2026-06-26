@@ -50,7 +50,6 @@ manifests:
   - k8s/ai-service.yml
   - k8s/auth-deployment.yml
   - k8s/auth-service.yml
-  - k8s/ai-service.yml
   - k8s/ingress.yml
   - k8s/sandbox-deployment.yml
   - k8s/sandbox-service.yml

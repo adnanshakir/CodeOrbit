@@ -2,6 +2,7 @@ import express from "express";
 import morgan from "morgan";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { createProxyServer } from "httpxy";
+import { refreshTTL } from "./config/redis.js";
 import http from "http";
 
 const app = express();
@@ -19,14 +20,8 @@ wsProxy.on("error", (err, req, socket) => {
 app.use(morgan("combined"));
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-  );
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
 
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
@@ -93,7 +88,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   const { hostname } = getHostParts(req);
 
   if (!hostname) {
@@ -102,6 +97,12 @@ app.use((req, res, next) => {
 
   const sandboxId = hostname.split(".")[0];
   const type = hostname.split(".")[1];
+
+  try {
+    await refreshTTL(sandboxId);
+  } catch (err) {
+    console.error("Failed to refresh TTL:", err);
+  }
 
   if (type === "agent") {
     return getAgentproxy(sandboxId)(req, res, next);
@@ -138,27 +139,31 @@ server.on("upgrade", (req, socket, head) => {
   });
 
   if (type === "agent") {
-    wsProxy.ws(
-      req,
-      socket,
-      {
-        target: `http://sandbox-service-${sandboxId}:3000`,
-      },
-      head
-    ).catch(() => socket.destroy());
+    wsProxy
+      .ws(
+        req,
+        socket,
+        {
+          target: `http://sandbox-service-${sandboxId}:3000`,
+        },
+        head,
+      )
+      .catch(() => socket.destroy());
 
     return;
   }
 
   if (type === "preview") {
-    wsProxy.ws(
-      req,
-      socket,
-      {
-        target: `http://sandbox-service-${sandboxId}`,
-      },
-      head
-    ).catch(() => socket.destroy());
+    wsProxy
+      .ws(
+        req,
+        socket,
+        {
+          target: `http://sandbox-service-${sandboxId}`,
+        },
+        head,
+      )
+      .catch(() => socket.destroy());
 
     return;
   }

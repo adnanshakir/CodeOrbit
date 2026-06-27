@@ -1,4 +1,6 @@
 import Redis from "ioredis";
+import { deletePod } from "../kubernetes/pod.js";
+import { deleteService } from "../kubernetes/service.js";
 
 const redis = new Redis(process.env.REDIS_URL); // Write data to Redis
 
@@ -16,6 +18,10 @@ subscriber.on("message", async (channel, key) => {
   console.log(`Sandbox with ID ${key} has expired.`);
 
   const sandboxId = key.split(":")[1];
+
+  // Delete the associated pod and service
+  await deletePod(sandboxId);
+  await deleteService(sandboxId);
 });
 
 export default { redis, subscriber };

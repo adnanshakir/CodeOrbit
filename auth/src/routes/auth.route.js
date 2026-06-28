@@ -2,12 +2,13 @@ import { Router } from "express";
 import User from "../models/user.model.js";
 import passport from "passport";
 import jwt from "jsonwebtoken";
+import { sendAuthNotification } from "../config/mq.js";
 
 const router = Router();
 
-router.get("/google", passport.authenticate("google", { session: false,scope: ["profile", "email"] }));
+router.get("/google", passport.authenticate("google", { session: false, scope: ["profile", "email"] }));
 
-router.get("/google/callback", passport.authenticate("google", { session: false,failureRedirect: "/login" }), async (req, res) => {
+router.get("/google/callback", passport.authenticate("google", { session: false, failureRedirect: "/login" }), async (req, res) => {
   try {
     const { id, displayName, emails, photos } = req.user;
     const email = emails[0]?.value;
@@ -16,6 +17,14 @@ router.get("/google/callback", passport.authenticate("google", { session: false,
     // Check if user already exists
     let user = await User.findOne({
       googleId: id,
+    });
+
+    // Send a message to the RabbitMQ queue about the authentication event
+    await sendAuthNotification({
+      userId: user._id,
+      email: email,
+      action: user ? "login" : "signup",
+      timestamp: new Date(),
     });
 
     if (!user) {

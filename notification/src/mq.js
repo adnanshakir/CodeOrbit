@@ -1,13 +1,26 @@
 import amqp from "amqplib";
 
-let QUEUE = "auth_notification_queue";
+const QUEUE = "auth_notification_queue";
 
-let connection = await amqp.connect(process.env.RABBITMQ_URL);
+let connection;
+let channel;
 
-let channel = await connection.createChannel();
+export async function connectToQueue() {
+  connection = await amqp.connect(process.env.RABBITMQ_URL);
 
-channel.assertQueue(QUEUE, {
-  durable: true,
-});
+  channel = await connection.createChannel();
 
-export default channel;
+  await channel.assertQueue(QUEUE, {
+    durable: true,
+  });
+
+  console.log("RabbitMQ connected (NOTIFICATION)");
+}
+
+export function getChannel() {
+  if (!channel) {
+    throw new Error("RabbitMQ channel is not initialized.");
+  }
+
+  return channel;
+}

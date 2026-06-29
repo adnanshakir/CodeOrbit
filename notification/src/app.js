@@ -3,8 +3,7 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import { sendEmail } from "./email.js";
 import { getEmailTemplate } from "./email.js";
-import channel from "./mq.js";
-
+import { getChannel } from "./mq.js";
 
 dotenv.config();
 const app = express();
@@ -24,28 +23,32 @@ app.get("/_status/readyz", (req, res) => {
   res.status(200).json({ status: "ready" });
 });
 
-channel.consume("auth_notification_queue", async (msg) => {
-  if (!msg) return;
+export function startConsumer() {
+  const channel = getChannel();
 
-  try {
-    const { email, timestamp, userId, action } = JSON.parse(
-      msg.content.toString()
-    );
+  channel.consume("auth_notification_queue", async (msg) => {
+    if (!msg) return;
 
-    const { subject, text, html } = getEmailTemplate(action, {
-      userId,
-      timestamp,
-    });
+    try {
+      const { email, timestamp, userId, action } = JSON.parse(msg.content.toString());
 
-    await sendEmail(email, subject, text, html);
+      const { subject, text, html } = getEmailTemplate(action, {
+        userId,
+        timestamp,
+      });
 
-    console.log(`${action} email sent to ${email}`);
+      await sendEmail(email, subject, text, html);
 
-    channel.ack(msg);
-  } catch (error) {
-    console.error("Error processing notification:", error);
-    channel.nack(msg, false, false);
-  }
-});
+      console.log(`${action} email sent to ${email}`);
+
+      channel.ack(msg);
+    } catch (error) {
+      console.error("Error processing notification:", error);
+      channel.nack(msg, false, false);
+    }
+  });
+
+  console.log("Notification consumer started");
+}
 
 export default app;

@@ -52,6 +52,11 @@ spec:
             secretKeyRef:
               name:  google
               key:  GOOGLE_CLIENT_SECRET
+        - name: GOOGLE_REFRESH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name:  google
+              key:  GOOGLE_REFRESH_TOKEN
         - name: RABBITMQ_URL
           valueFrom:
             secretKeyRef:

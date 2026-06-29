@@ -43,7 +43,7 @@ router.get("/google/callback", passport.authenticate("google", { session: false,
 
     // Send the token as a cookie or in the response
     res.cookie("token", token, { httpOnly: true });
-    res.redirect("/"); // Redirect to a protected route after successful login
+    res.redirect("http://localhost:5173"); // Redirect to a protected route after successful login
   } catch (err) {
     console.error("Error during Google OAuth callback:", err);
     res.redirect("/login");
